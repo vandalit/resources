@@ -343,6 +343,7 @@
             let isCountdown = false;
             let roundingValue = 1; // Valor por defecto: 1 minuto
             let currentLogEntry = null;
+            let accumulatedTime = 0; // Tiempo acumulado para el registro
             
             // Formatear tiempo (mm:ss.SS)
             function formatTime(ms) {
@@ -429,11 +430,13 @@
                             updateLogEntry();
                         }
                     } else {
-                        elapsedTime += (now - startTime);
+                        const timePassed = now - startTime;
+                        elapsedTime += timePassed;
+                        accumulatedTime += timePassed; // Sumar al tiempo acumulado
                         
                         // Crear nueva entrada de log para el tiempo positivo
                         currentLogEntry = {
-                            lapTime: elapsedTime,
+                            lapTime: accumulatedTime, // Usamos el tiempo acumulado
                             roundedTime: null,
                             timerEnd: null
                         };
@@ -447,17 +450,9 @@
                     startStopBtn.classList.remove('btn-danger');
                     startStopBtn.classList.add('btn-primary');
                     
-                    // Habilitar botones según el modo
-                    if (isCountdown) {
-                        // Después de pausar el timer, volver a modo cronómetro
-                        isCountdown = false;
-                        roundBtn.disabled = true;
-                        countdownBtn.disabled = true;
-                    } else {
-                        // En modo cronómetro pausado, permitir redondear
-                        roundBtn.disabled = false;
-                        countdownBtn.disabled = currentLogEntry?.roundedTime === null;
-                    }
+                    // Habilitar botones según el estado
+                    roundBtn.disabled = isCountdown || elapsedTime <= 0;
+                    countdownBtn.disabled = false; // Timer siempre disponible en pausa
                 }
             }
             
@@ -480,14 +475,24 @@
                     
                     // Habilitar el botón de timer
                     countdownBtn.disabled = false;
-                    roundBtn.disabled = true;
+                    roundBtn.disabled = false; // Permitir múltiples redondeos
                 }
             }
             
             // Iniciar cuenta atrás
             function startCountdown() {
-                if (!isRunning && !isCountdown && elapsedTime > 0 && currentLogEntry?.roundedTime !== null) {
+                if (!isRunning && elapsedTime > 0) {
                     isCountdown = true;
+                    
+                    // Si no hay entrada de log, crear una
+                    if (!currentLogEntry) {
+                        currentLogEntry = {
+                            lapTime: accumulatedTime,
+                            roundedTime: null,
+                            timerEnd: null
+                        };
+                    }
+                    
                     startTimer();
                 }
             }
@@ -496,6 +501,7 @@
             function resetTimer() {
                 clearInterval(timerInterval);
                 elapsedTime = 0;
+                accumulatedTime = 0;
                 isRunning = false;
                 isCountdown = false;
                 currentLogEntry = null;
@@ -509,7 +515,7 @@
                 startStopBtn.classList.add('btn-primary');
                 
                 roundBtn.disabled = true;
-                countdownBtn.disabled = true;
+                countdownBtn.disabled = false; // Timer siempre disponible
             }
             
             // Actualizar entrada en el log
@@ -544,13 +550,19 @@
                 if (isRunning) {
                     pauseTimer();
                 } else {
+                    // Al iniciar, siempre en modo cronómetro (no countdown)
+                    isCountdown = false;
                     startTimer();
                 }
             });
             
             roundBtn.addEventListener('click', roundTime);
             
-            countdownBtn.addEventListener('click', startCountdown);
+            countdownBtn.addEventListener('click', function() {
+                // Al iniciar timer, siempre en modo countdown
+                isCountdown = true;
+                startCountdown();
+            });
             
             configBtn.addEventListener('click', toggleConfigPanel);
             
