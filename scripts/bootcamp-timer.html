@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cronómetro Bootcamp</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --success: #4cc9f0;
+            --warning: #f8961e;
+            --danger: #f72585;
+            --light: #f8f9fa;
+            --dark: #121212;
+            --gray: #6c757d;
+            --bg-dark: #000000;
+            --card-dark: #1e1e1e;
+            --text-light: #ffffff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--card-dark);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: var(--primary);
+        }
+
+        .timer-display {
+            font-size: 5rem;
+            text-align: center;
+            margin: 30px 0;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+            padding: 20px;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            background-color: rgba(0, 0, 0, 0.3);
+        }
+
+        .running {
+            color: var(--success);
+            box-shadow: 0 0 15px rgba(76, 201, 240, 0.5);
+        }
+
+        .paused {
+            color: var(--primary);
+            box-shadow: 0 0 15px rgba(67, 97, 238, 0.5);
+        }
+
+        .counting-down {
+            color: var(--warning);
+            box-shadow: 0 0 15px rgba(248, 150, 30, 0.5);
+        }
+
+        .negative {
+            color: var(--danger);
+            box-shadow: 0 0 15px rgba(247, 37, 133, 0.5);
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--secondary);
+        }
+
+        .btn-success {
+            background-color: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #3aa8d8;
+        }
+
+        .btn-warning {
+            background-color: var(--warning);
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background-color: #e07e0c;
+        }
+
+        .btn-danger {
+            background-color: var(--danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #e51779;
+        }
+
+        .btn-light {
+            background-color: var(--light);
+            color: var(--dark);
+        }
+
+        .btn-light:hover {
+            background-color: #e2e6ea;
+        }
+
+        .btn-dark {
+            background-color: var(--dark);
+            color: var(--text-light);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-dark:hover {
+            background-color: #2a2a2a;
+        }
+
+        .log-container {
+            margin-top: 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 20px;
+        }
+
+        .log-title {
+            text-align: center;
+            margin-bottom: 20px;
+            color: var(--gray);
+        }
+
+        .log-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .log-table th, .log-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .log-table th {
+            background-color: rgba(0, 0, 0, 0.3);
+            color: var(--text-light);
+            font-weight: 600;
+        }
+
+        .log-table tr:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .rounded-time {
+            color: var(--success);
+            font-weight: bold;
+        }
+
+        .timer-ended {
+            color: var(--danger);
+            font-weight: bold;
+        }
+
+        .config-panel {
+            background-color: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            display: none;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .config-panel.show {
+            display: block;
+        }
+
+        .config-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .config-label {
+            font-weight: 600;
+            margin-right: 15px;
+        }
+
+        .config-input {
+            padding: 8px 12px;
+            border-radius: 5px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background-color: rgba(0, 0, 0, 0.3);
+            color: var(--text-light);
+            width: 80px;
+            text-align: center;
+        }
+
+        .close-config {
+            display: block;
+            margin-top: 15px;
+            text-align: center;
+            color: var(--primary);
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        @media (max-width: 600px) {
+            .timer-display {
+                font-size: 3rem;
+            }
+
+            .controls {
+                gap: 10px;
+            }
+
+            .btn {
+                padding: 10px 15px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Cronómetro Bootcamp</h1>
+        
+        <div id="timerDisplay" class="timer-display paused">00:00.00</div>
+        
+        <div class="controls">
+            <button id="startStopBtn" class="btn btn-primary">
+                <i class="fas fa-play"></i> Iniciar
+            </button>
+            <button id="roundBtn" class="btn btn-success" disabled>
+                <i class="fas fa-plus-circle"></i> Redondear
+            </button>
+            <button id="countdownBtn" class="btn btn-warning" disabled>
+                <i class="fas fa-hourglass-start"></i> Timer
+            </button>
+            <button id="configBtn" class="btn btn-dark">
+                <i class="fas fa-cog"></i> Config
+            </button>
+            <button id="resetBtn" class="btn btn-light">
+                <i class="fas fa-redo"></i> Reiniciar
+            </button>
+        </div>
+
+        <div id="configPanel" class="config-panel">
+            <div class="config-row">
+                <span class="config-label">Minutos extra al redondear:</span>
+                <input type="number" id="roundingValue" class="config-input" min="1" value="1">
+            </div>
+            <span class="close-config" id="closeConfig"><i class="fas fa-times"></i> Cerrar configuración</span>
+        </div>
+        
+        <div class="log-container">
+            <h3 class="log-title">Registro de Tiempos</h3>
+            <table class="log-table">
+                <thead>
+                    <tr>
+                        <th>Vuelta</th>
+                        <th>Redondeo</th>
+                        <th>Fin Timer</th>
+                    </tr>
+                </thead>
+                <tbody id="logBody">
+                    <!-- Las entradas del log se agregarán aquí -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Elementos del DOM
+            const timerDisplay = document.getElementById('timerDisplay');
+            const startStopBtn = document.getElementById('startStopBtn');
+            const roundBtn = document.getElementById('roundBtn');
+            const countdownBtn = document.getElementById('countdownBtn');
+            const configBtn = document.getElementById('configBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            const logBody = document.getElementById('logBody');
+            const configPanel = document.getElementById('configPanel');
+            const roundingValueInput = document.getElementById('roundingValue');
+            const closeConfig = document.getElementById('closeConfig');
+            
+            // Variables de estado
+            let startTime;
+            let elapsedTime = 0;
+            let timerInterval;
+            let isRunning = false;
+            let isCountdown = false;
+            let roundingValue = 1; // Valor por defecto: 1 minuto
+            let currentLogEntry = null;
+            
+            // Formatear tiempo (mm:ss.SS)
+            function formatTime(ms) {
+                let isNegative = false;
+                if (ms < 0) {
+                    isNegative = true;
+                    ms = Math.abs(ms);
+                }
+                
+                const totalSeconds = ms / 1000;
+                const minutes = Math.floor(totalSeconds / 60);
+                const seconds = Math.floor(totalSeconds % 60);
+                const milliseconds = Math.floor((ms % 1000) / 10);
+                
+                const timeStr = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${milliseconds.toString().padStart(2, '0')}`;
+                
+                return isNegative ? `-${timeStr}` : timeStr;
+            }
+            
+            // Actualizar el display del timer
+            function updateTimerDisplay() {
+                let displayTime = elapsedTime;
+                
+                if (isRunning) {
+                    const now = Date.now();
+                    if (isCountdown) {
+                        // Modo cuenta atrás
+                        const timePassed = now - startTime;
+                        displayTime = elapsedTime - timePassed;
+                        
+                        if (displayTime <= 0) {
+                            timerDisplay.classList.remove('counting-down');
+                            timerDisplay.classList.add('negative');
+                        }
+                    } else {
+                        // Modo cronómetro (siempre suma)
+                        displayTime = elapsedTime + (now - startTime);
+                    }
+                }
+                
+                timerDisplay.textContent = formatTime(displayTime);
+            }
+            
+            // Iniciar el cronómetro
+            function startTimer() {
+                if (!isRunning) {
+                    startTime = Date.now();
+                    isRunning = true;
+                    
+                    if (isCountdown) {
+                        timerDisplay.classList.remove('paused');
+                        timerDisplay.classList.add('counting-down');
+                    } else {
+                        timerDisplay.classList.remove('paused', 'counting-down', 'negative');
+                        timerDisplay.classList.add('running');
+                    }
+                    
+                    timerInterval = setInterval(updateTimerDisplay, 10);
+                    startStopBtn.innerHTML = '<i class="fas fa-pause"></i> Pausar';
+                    startStopBtn.classList.remove('btn-primary');
+                    startStopBtn.classList.add('btn-danger');
+                    
+                    roundBtn.disabled = true;
+                    countdownBtn.disabled = true;
+                }
+            }
+            
+            // Pausar el cronómetro
+            function pauseTimer() {
+                if (isRunning) {
+                    clearInterval(timerInterval);
+                    const now = Date.now();
+                    
+                    if (isCountdown) {
+                        elapsedTime -= (now - startTime);
+                        if (elapsedTime <= 0) {
+                            timerDisplay.classList.remove('counting-down');
+                            timerDisplay.classList.add('negative');
+                        }
+                        
+                        // Registrar fin del timer
+                        if (currentLogEntry) {
+                            currentLogEntry.timerEnd = elapsedTime;
+                            updateLogEntry();
+                        }
+                    } else {
+                        elapsedTime += (now - startTime);
+                        
+                        // Crear nueva entrada de log para el tiempo positivo
+                        currentLogEntry = {
+                            lapTime: elapsedTime,
+                            roundedTime: null,
+                            timerEnd: null
+                        };
+                    }
+                    
+                    isRunning = false;
+                    timerDisplay.classList.remove('running', 'counting-down');
+                    timerDisplay.classList.add('paused');
+                    
+                    startStopBtn.innerHTML = '<i class="fas fa-play"></i> Continuar';
+                    startStopBtn.classList.remove('btn-danger');
+                    startStopBtn.classList.add('btn-primary');
+                    
+                    // Habilitar botones según el modo
+                    if (isCountdown) {
+                        // Después de pausar el timer, volver a modo cronómetro
+                        isCountdown = false;
+                        roundBtn.disabled = true;
+                        countdownBtn.disabled = true;
+                    } else {
+                        // En modo cronómetro pausado, permitir redondear
+                        roundBtn.disabled = false;
+                        countdownBtn.disabled = currentLogEntry?.roundedTime === null;
+                    }
+                }
+            }
+            
+            // Redondear el tiempo
+            function roundTime() {
+                if (!isRunning && !isCountdown && currentLogEntry) {
+                    // Calcular minutos totales (con decimales)
+                    const totalMinutes = elapsedTime / 60000;
+                    // Redondear hacia arriba y sumar minutos extra
+                    const roundedMinutes = Math.ceil(totalMinutes) + roundingValue;
+                    elapsedTime = roundedMinutes * 60000; // Actualizamos el tiempo mostrado
+                    
+                    // Actualizar la entrada de log
+                    currentLogEntry.roundedTime = elapsedTime;
+                    currentLogEntry.timerEnd = null;
+                    updateLogEntry();
+                    
+                    // Actualizar display
+                    updateTimerDisplay();
+                    
+                    // Habilitar el botón de timer
+                    countdownBtn.disabled = false;
+                    roundBtn.disabled = true;
+                }
+            }
+            
+            // Iniciar cuenta atrás
+            function startCountdown() {
+                if (!isRunning && !isCountdown && elapsedTime > 0 && currentLogEntry?.roundedTime !== null) {
+                    isCountdown = true;
+                    startTimer();
+                }
+            }
+            
+            // Reiniciar el cronómetro
+            function resetTimer() {
+                clearInterval(timerInterval);
+                elapsedTime = 0;
+                isRunning = false;
+                isCountdown = false;
+                currentLogEntry = null;
+                
+                timerDisplay.textContent = formatTime(0);
+                timerDisplay.classList.remove('running', 'paused', 'counting-down', 'negative');
+                timerDisplay.classList.add('paused');
+                
+                startStopBtn.innerHTML = '<i class="fas fa-play"></i> Iniciar';
+                startStopBtn.classList.remove('btn-danger');
+                startStopBtn.classList.add('btn-primary');
+                
+                roundBtn.disabled = true;
+                countdownBtn.disabled = true;
+            }
+            
+            // Actualizar entrada en el log
+            function updateLogEntry() {
+                if (currentLogEntry) {
+                    // Buscar si ya existe una fila para esta entrada
+                    let existingRow = document.querySelector(`tr[data-id="${currentLogEntry.lapTime}"]`);
+                    
+                    if (!existingRow) {
+                        // Crear nueva fila
+                        existingRow = document.createElement('tr');
+                        existingRow.setAttribute('data-id', currentLogEntry.lapTime);
+                        logBody.insertBefore(existingRow, logBody.firstChild);
+                    }
+                    
+                    // Actualizar contenido
+                    existingRow.innerHTML = `
+                        <td>${formatTime(currentLogEntry.lapTime)}</td>
+                        <td>${currentLogEntry.roundedTime ? `<span class="rounded-time">${formatTime(currentLogEntry.roundedTime)}</span>` : '-'}</td>
+                        <td>${currentLogEntry.timerEnd !== null ? `<span class="timer-ended">${formatTime(currentLogEntry.timerEnd)}</span>` : '-'}</td>
+                    `;
+                }
+            }
+            
+            // Mostrar/ocultar panel de configuración
+            function toggleConfigPanel() {
+                configPanel.classList.toggle('show');
+            }
+            
+            // Event listeners
+            startStopBtn.addEventListener('click', function() {
+                if (isRunning) {
+                    pauseTimer();
+                } else {
+                    startTimer();
+                }
+            });
+            
+            roundBtn.addEventListener('click', roundTime);
+            
+            countdownBtn.addEventListener('click', startCountdown);
+            
+            configBtn.addEventListener('click', toggleConfigPanel);
+            
+            resetBtn.addEventListener('click', resetTimer);
+            
+            closeConfig.addEventListener('click', toggleConfigPanel);
+            
+            roundingValueInput.addEventListener('change', function() {
+                roundingValue = parseInt(this.value) || 1;
+                this.value = roundingValue; // Asegurarnos que es un número válido
+            });
+        });
+    </script>
+</body>
+</html>
