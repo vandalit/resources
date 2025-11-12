@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Valor de Propiedades | Vstone</title>
+    <style>
+        .calculadora-container {
+            font-family: 'Arial', sans-serif;
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            background: #f9f9f9;
+        }
+        h2 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #34495e;
+        }
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            width: 100%;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        #resultado {
+            margin-top: 25px;
+            padding: 20px;
+            background: #e8f4fc;
+            border-radius: 5px;
+            display: none;
+        }
+        .valor-final {
+            font-size: 24px;
+            color: #27ae60;
+            font-weight: bold;
+        }
+        .detalle-calculo {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+        .ajustes-avanzados {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f0f7ff;
+            border-radius: 5px;
+        }
+        @media (max-width: 768px) {
+            .calculadora-container {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="calculadora-container">
+        <h2>¿Cuánto vale tu propiedad?</h2>
+        <div class="form-group">
+            <label for="tipo-propiedad">Tipo de propiedad</label>
+            <select id="tipo-propiedad">
+                <option value="casa">Casa</option>
+                <option value="departamento">Departamento</option>
+                <option value="oficina">Oficina</option>
+                <option value="local">Local Comercial</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="metros-cuadrados">Metros cuadrados construidos</label>
+            <input type="number" id="metros-cuadrados" min="20" max="2000" value="100">
+        </div>
+        
+        <div class="form-group">
+            <label for="ubicacion">Ubicación (Comuna)</label>
+            <select id="ubicacion">
+                <option value="25">Santiago Centro</option>
+                <option value="31.5" selected>Providencia</option>
+                <option value="28">Las Condes</option>
+                <option value="18">Quilicura</option>
+                <option value="21">Maipú</option>
+                <option value="26.5">Viña del Mar</option>
+                <option value="15">Quilpué</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="habitaciones">Número de habitaciones</label>
+            <input type="number" id="habitaciones" min="1" max="10" value="3">
+        </div>
+        
+        <div class="form-group">
+            <label for="banos">Número de baños</label>
+            <input type="number" id="banos" min="1" max="6" value="2">
+        </div>
+        
+        <div class="form-group">
+            <label for="antiguedad">Antigüedad (años)</label>
+            <input type="number" id="antiguedad" min="0" max="100" value="10">
+        </div>
+        
+        <div class="form-group">
+            <label for="calidad">Estado de la propiedad</label>
+            <select id="calidad">
+                <option value="1.15">Excelente (remodelada)</option>
+                <option value="1.05">Muy bueno</option>
+                <option value="1.0" selected>Bueno</option>
+                <option value="0.9">Regular (necesita reparaciones)</option>
+                <option value="0.75">Malo (requiere renovación)</option>
+            </select>
+        </div>
+        
+        <!-- SECCIÓN DE AJUSTES AVANZADOS -->
+        <div class="ajustes-avanzados">
+            <div class="form-group">
+                <label for="valor-uf">Valor de la UF (en CLP)</label>
+                <input type="number" id="valor-uf" value="40000" min="30000" max="50000">
+            </div>
+            
+            <div class="form-group">
+                <label for="depreciacion">Factor de depreciación anual (%)</label>
+                <input type="number" id="depreciacion" value="1.2" min="0" max="5" step="0.1">
+                <small>Recomendado: 1.2% anual para propiedades bien mantenidas</small>
+            </div>
+        </div>
+        
+        <button onclick="calcularValor()">Calcular Valor</button>
+        
+        <div id="resultado">
+            <h3>Valor estimado de tu propiedad:</h3>
+            <div class="valor-final" id="valor-estimado"></div>
+            <div class="detalle-calculo">
+                <p>Este cálculo considera:</p>
+                <ul>
+                    <li>Precio base por m² según ubicación (en UF)</li>
+                    <li>Tipo de propiedad y estado de conservación</li>
+                    <li>Depreciación por antigüedad</li>
+                    <li>Ajustes por habitaciones y baños adicionales</li>
+                </ul>
+                <p><em>Para una valoración profesional exacta, contacta a nuestros agentes certificados.</em></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function calcularValor() {
+            // Coeficientes por tipo de propiedad (ajustados según mercado real)
+            const coeficientesTipo = {
+                "casa": 1.1,       // Casas valen ~10% más que departamentos
+                "departamento": 1.0,
+                "oficina": 0.85,   // Oficinas ~15% menos que departamentos
+                "local": 1.25      // Locales comerciales ~25% más
+            };
+            
+            // Obtener valores del formulario
+            const tipoPropiedad = document.getElementById("tipo-propiedad").value;
+            const metrosCuadrados = parseFloat(document.getElementById("metros-cuadrados").value);
+            const precioBaseUF = parseFloat(document.getElementById("ubicacion").value);
+            const habitaciones = parseInt(document.getElementById("habitaciones").value);
+            const banos = parseInt(document.getElementById("banos").value);
+            const antiguedad = parseInt(document.getElementById("antiguedad").value);
+            const calidad = parseFloat(document.getElementById("calidad").value);
+            const ufToClp = parseFloat(document.getElementById("valor-uf").value);
+            const tasaDepreciacionAnual = parseFloat(document.getElementById("depreciacion").value) / 100;
+            
+            // --- CÁLCULO PRINCIPAL ---
+            // 1. Valor base (precio por m² * metros * coeficiente tipo)
+            let valorUF = precioBaseUF * metrosCuadrados * coeficientesTipo[tipoPropiedad];
+            
+            // 2. Ajuste por antigüedad (depreciación compuesta)
+            valorUF *= Math.pow(1 - tasaDepreciacionAnual, antiguedad);
+            
+            // 3. Ajuste por habitaciones (2% por hab. extra sobre 3)
+            if (habitaciones > 3) {
+                valorUF *= 1 + (0.02 * (habitaciones - 3));
+            }
+            
+            // 4. Ajuste por baños (1.5% por baño extra sobre 1)
+            if (banos > 1) {
+                valorUF *= 1 + (0.015 * (banos - 1));
+            }
+            
+            // 5. Aplicar factor de calidad
+            valorUF *= calidad;
+            
+            // 6. Convertir a CLP
+            const valorCLP = valorUF * ufToClp;
+            
+            // --- MOSTRAR RESULTADO ---
+            document.getElementById("valor-estimado").innerHTML = 
+                `${valorUF.toFixed(1)} UF<br>
+                (≈ $${Math.round(valorCLP).toLocaleString('es-CL')} CLP)`;
+            
+            document.getElementById("resultado").style.display = "block";
+            document.getElementById("resultado").scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>

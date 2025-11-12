@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ruleta de Participación - Bootcamp</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --accent: #f72585;
+            --success: #4cc9f0;
+            --warning: #f8961e;
+            --danger: #ef233c;
+            --light: #f8f9fa;
+            --dark: #121212;
+            --darker: #0a0a0a;
+            --gray: #6c757d;
+            --bg-dark: #000000;
+            --card-dark: #1e1e1e;
+            --text-light: #ffffff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: var(--card-dark);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: var(--primary);
+            font-size: 2.2rem;
+        }
+
+        .section-title {
+            margin: 25px 0 15px;
+            color: var(--success);
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 8px;
+        }
+
+        /* Estilos para la ruleta */
+        .wheel-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 30px 0;
+        }
+
+        .wheel {
+            width: 300px;
+            height: 300px;
+            position: relative;
+            border-radius: 50%;
+            overflow: hidden;
+            box-shadow: 0 0 0 8px var(--darker), 0 0 30px rgba(0, 0, 0, 0.8);
+            transition: transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99);
+            transform: rotate(0deg);
+            margin-bottom: 30px;
+        }
+
+        .wheel-item {
+            position: absolute;
+            width: 50%;
+            height: 50%;
+            transform-origin: 100% 100%;
+            left: 0;
+            top: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: var(--text-light);
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+            overflow: hidden;
+        }
+
+        .wheel-center {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background: var(--darker);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+            border: 3px solid var(--accent);
+        }
+
+        .pointer {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--danger);
+            font-size: 40px;
+            z-index: 5;
+            text-shadow: 0 0 10px rgba(239, 35, 60, 0.7);
+        }
+
+        .spin-btn {
+            padding: 15px 40px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(67, 97, 238, 0.4);
+            margin-top: 20px;
+        }
+
+        .spin-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(67, 97, 238, 0.6);
+        }
+
+        .spin-btn:active {
+            transform: translateY(1px);
+        }
+
+        .spin-btn:disabled {
+            background: var(--gray);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .result {
+            margin-top: 30px;
+            font-size: 1.8rem;
+            text-align: center;
+            min-height: 60px;
+            padding: 15px;
+            border-radius: 10px;
+            background-color: rgba(0, 0, 0, 0.3);
+            border: 2px solid var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .winner {
+            color: var(--success);
+            font-weight: bold;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        /* Estilos para la gestión de alumnos */
+        .management-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        @media (max-width: 768px) {
+            .management-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .input-section, .students-section {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 150px;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--gray);
+            background: rgba(0, 0, 0, 0.3);
+            color: var(--text-light);
+            margin-bottom: 15px;
+            resize: vertical;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--secondary);
+        }
+
+        .student-list {
+            margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .student-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .student-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .student-name {
+            flex-grow: 1;
+            margin-left: 15px;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--danger);
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--success);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        .status {
+            margin-left: 15px;
+            font-size: 0.8rem;
+            padding: 3px 8px;
+            border-radius: 12px;
+        }
+
+        .active {
+            background-color: rgba(76, 201, 240, 0.2);
+            color: var(--success);
+        }
+
+        .inactive {
+            background-color: rgba(239, 35, 60, 0.2);
+            color: var(--danger);
+        }
+
+        .no-students {
+            text-align: center;
+            color: var(--gray);
+            padding: 20px;
+        }
+
+        /* Scrollbar personalizada */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--secondary);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1><i class="fas fa-random"></i> Ruleta de Participación</h1>
+        
+        <div class="wheel-container">
+            <div class="pointer">
+                <i class="fas fa-caret-down"></i>
+            </div>
+            <div class="wheel" id="wheel"></div>
+            <div class="wheel-center"></div>
+            
+            <button class="spin-btn" id="spinBtn">
+                <i class="fas fa-redo"></i> Girar Ruleta
+            </button>
+            
+            <div class="result" id="result">
+                <span id="winnerText">Presiona "Girar Ruleta" para comenzar</span>
+            </div>
+        </div>
+        
+        <h2 class="section-title"><i class="fas fa-users"></i> Gestión de Alumnos</h2>
+        
+        <div class="management-container">
+            <div class="input-section">
+                <h3><i class="fas fa-edit"></i> Agregar Alumnos</h3>
+                <p>Ingresa los nombres de tus alumnos (uno por línea):</p>
+                <textarea id="studentsInput" placeholder="Ejemplo:
+Juan Pérez
+María García
+Carlos López"></textarea>
+                <button class="btn btn-primary" id="addStudentsBtn">
+                    <i class="fas fa-save"></i> Guardar Lista
+                </button>
+            </div>
+            
+            <div class="students-section">
+                <h3><i class="fas fa-list-check"></i> Lista de Alumnos</h3>
+                <p>Habilita/deshabilita alumnos presentes:</p>
+                <div class="student-list" id="studentList">
+                    <div class="no-students">No hay alumnos registrados</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Elementos del DOM
+            const wheel = document.getElementById('wheel');
+            const spinBtn = document.getElementById('spinBtn');
+            const winnerText = document.getElementById('winnerText');
+            const result = document.getElementById('result');
+            const studentsInput = document.getElementById('studentsInput');
+            const addStudentsBtn = document.getElementById('addStudentsBtn');
+            const studentList = document.getElementById('studentList');
+            
+            // Variables de estado
+            let students = [];
+            let isSpinning = false;
+            let currentRotation = 0;
+            const colors = [
+                '#4361ee', '#3f37c9', '#4cc9f0', '#4895ef', 
+                '#560bad', '#b5179e', '#f72585', '#7209b7'
+            ];
+            
+            // Cargar estudiantes guardados
+            loadStudents();
+            
+            // Girar la ruleta
+            spinBtn.addEventListener('click', spinWheel);
+            
+            // Guardar estudiantes
+            addStudentsBtn.addEventListener('click', saveStudents);
+            
+            // Función para girar la ruleta
+            function spinWheel() {
+                if (isSpinning || getActiveStudents().length === 0) return;
+                
+                isSpinning = true;
+                spinBtn.disabled = true;
+                result.classList.remove('winner');
+                winnerText.textContent = "Girando...";
+                
+                // Seleccionar un estudiante aleatorio activo
+                const activeStudents = getActiveStudents();
+                const winnerIndex = Math.floor(Math.random() * activeStudents.length);
+                const winner = activeStudents[winnerIndex];
+                
+                // Calcular la rotación necesaria
+                const segmentAngle = 360 / activeStudents.length;
+                const targetAngle = 360 * 5 + (360 - (segmentAngle * winnerIndex));
+                
+                // Aplicar la rotación
+                currentRotation += targetAngle;
+                wheel.style.transform = `rotate(${currentRotation}deg)`;
+                
+                // Mostrar el resultado después de que termine la animación
+                setTimeout(() => {
+                    isSpinning = false;
+                    spinBtn.disabled = false;
+                    result.classList.add('winner');
+                    winnerText.innerHTML = `<i class="fas fa-crown"></i> ${winner.name}`;
+                }, 4000);
+            }
+            
+            // Función para obtener estudiantes activos
+            function getActiveStudents() {
+                return students.filter(student => student.active);
+            }
+            
+            // Función para guardar estudiantes
+            function saveStudents() {
+                const namesText = studentsInput.value.trim();
+                if (!namesText) return;
+                
+                const namesArray = namesText.split('\n')
+                    .map(name => name.trim())
+                    .filter(name => name !== '');
+                
+                // Mantener el estado activo de los estudiantes existentes
+                const existingStudents = students.reduce((acc, student) => {
+                    acc[student.name] = student.active;
+                    return acc;
+                }, {});
+                
+                students = namesArray.map(name => {
+                    return {
+                        name: name,
+                        active: existingStudents[name] !== undefined ? existingStudents[name] : true
+                    };
+                });
+                
+                updateStudentList();
+                renderWheel();
+                saveToLocalStorage();
+            }
+            
+            // Función para actualizar la lista de estudiantes
+            function updateStudentList() {
+                if (students.length === 0) {
+                    studentList.innerHTML = '<div class="no-students">No hay alumnos registrados</div>';
+                    return;
+                }
+                
+                studentList.innerHTML = '';
+                students.forEach((student, index) => {
+                    const studentItem = document.createElement('div');
+                    studentItem.className = 'student-item';
+                    studentItem.innerHTML = `
+                        <span class="student-number">${index + 1}</span>
+                        <span class="student-name">${student.name}</span>
+                        <span class="status ${student.active ? 'active' : 'inactive'}">
+                            ${student.active ? 'Presente' : 'Ausente'}
+                        </span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" ${student.active ? 'checked' : ''} data-index="${index}">
+                            <span class="slider"></span>
+                        </label>
+                    `;
+                    studentList.appendChild(studentItem);
+                });
+                
+                // Agregar event listeners a los switches
+                document.querySelectorAll('.toggle-switch input').forEach(switchEl => {
+                    switchEl.addEventListener('change', function() {
+                        const index = parseInt(this.getAttribute('data-index'));
+                        students[index].active = this.checked;
+                        saveToLocalStorage();
+                        renderWheel();
+                        
+                        // Actualizar el estado en la UI
+                        const statusEl = this.closest('.student-item').querySelector('.status');
+                        statusEl.textContent = this.checked ? 'Presente' : 'Ausente';
+                        statusEl.className = `status ${this.checked ? 'active' : 'inactive'}`;
+                    });
+                });
+            }
+            
+            // Función para renderizar la ruleta
+            function renderWheel() {
+                wheel.innerHTML = '';
+                const activeStudents = getActiveStudents();
+                
+                if (activeStudents.length === 0) {
+                    spinBtn.disabled = true;
+                    return;
+                }
+                
+                spinBtn.disabled = false;
+                const segmentAngle = 360 / activeStudents.length;
+                
+                activeStudents.forEach((student, index) => {
+                    const segment = document.createElement('div');
+                    segment.className = 'wheel-item';
+                    segment.style.transform = `rotate(${segmentAngle * index}deg) skewY(${90 - segmentAngle}deg)`;
+                    segment.style.background = colors[index % colors.length];
+                    segment.innerHTML = `<span style="transform: skewY(${segmentAngle - 90}deg) rotate(${segmentAngle / 2}deg);">${student.name}</span>`;
+                    wheel.appendChild(segment);
+                });
+            }
+            
+            // Función para guardar en localStorage
+            function saveToLocalStorage() {
+                localStorage.setItem('classroomWheelStudents', JSON.stringify(students));
+            }
+            
+            // Función para cargar desde localStorage
+            function loadStudents() {
+                const savedStudents = localStorage.getItem('classroomWheelStudents');
+                if (savedStudents) {
+                    students = JSON.parse(savedStudents);
+                    updateStudentList();
+                    renderWheel();
+                    
+                    // Actualizar el textarea con los nombres
+                    studentsInput.value = students.map(student => student.name).join('\n');
+                }
+            }
+        });
+    </script>
+</body>
+</html>
